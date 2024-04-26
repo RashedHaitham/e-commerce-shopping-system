@@ -72,9 +72,35 @@
               <a href="/signup" class="text-dark">Sign up</a>
             </button>
             <% } else { %>
-            <li class="nav-item"></li>
-          </ul>
+            <li class="nav-item"> 
+              <div class="chatbox-button">
+                <div class="btn btn-light me-md-3">
+                  <i class="fas fa-comment" style="color: darkred;font-size: 1.3rem;"></i>
+                </div>
+              </div>
 
+              <div id="chatModal" class="modal" tabindex="-1" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title text-dark">Chat</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="chatbox-messages m-2" id="chatMessages"></div>
+                            <input type="text" id="chat-input" class="form-control" placeholder="Type your message...">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" id="send-button" class="btn btn-primary">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+
+            </li>
+
+          </ul>
           <div class="dropdown">
             <a
               class="dropdown-toggle d-flex align-items-center hidden-arrow m-2"

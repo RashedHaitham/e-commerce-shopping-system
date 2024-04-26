@@ -120,3 +120,24 @@ body {
 		margin-bottom: 30px;
 	}
 }
+
+.message {
+	background-color: #a4161a;
+	color:white;
+	border-radius: 5px;
+    padding: 5px;
+    margin: 5px 0;
+}
+
+.user-message {
+    float: right;
+    clear: both; 
+}
+
+.bot-message {
+	background-color: rgb(44 53 176);
+    text-align: left;
+	float: left;
+    clear: both; 
+}
+
