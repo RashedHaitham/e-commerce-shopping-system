@@ -131,6 +131,7 @@ exports.postSignup = (req, res, next) => {
   const firstName=req.body.firstName;
   const lastName=req.body.lastName;
   const number=req.body.number;
+  const userType=req.body.userType;
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     console.log(errors.array());
@@ -159,6 +160,7 @@ exports.postSignup = (req, res, next) => {
         lastName:lastName,
         number:number,
         picture:"",
+        userType:userType,
         password: hashedPassword,
         cart: { items: [] },
       });
@@ -168,7 +170,7 @@ exports.postSignup = (req, res, next) => {
       res.redirect("/login");
       // return transporter.sendMail({
       //   to: email,
-      //   from: 'rushdie@shop.com',
+      //   from: 'info@hunter.com',
       //   subject: 'Signup succeeded!',
       //   html: '<h1>You successfully signed up!</h1>'
       // });
@@ -222,7 +224,7 @@ exports.postReset = (req, res, next) => {
         res.redirect("/");
         transporter.sendMail({
           to: req.body.email,
-          from: "rushdie@shop.com",
+          from: "shop@hunter.com",
           subject: "Password reset",
           html: `
             <p>You requested a password reset</p>

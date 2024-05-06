@@ -44,6 +44,7 @@
               >Orders</a
             >
           </li>
+          <% if  (isVendor) { %>
           <li class="nav-item">
             <a
               class="nav-link <%= path === '/admin/add-product' ? 'active' : '' %>"
@@ -58,6 +59,7 @@
               >Admin Products
             </a>
           </li>
+          <% } %>
           <% } %>
         </ul>
 

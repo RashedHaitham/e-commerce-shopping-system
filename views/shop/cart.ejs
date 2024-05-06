@@ -14,7 +14,12 @@
                                 <div class="fw-bold">
                                     <%= p.productId.title %>
                                 </div>
-                                Quantity: <span class="badge badge-dark rounded-pill"><%= p.quantity %></span>
+                                Quantity: 
+                                <span class="btn-group btn-group-sm m-2" role="group" aria-label="Second group">
+                                    <button type="button" class="btn btn-plus" style="background-color: #dadada;" data-product-id="<%= p.productId._id %>" data-mdb-ripple-init>+</button>
+                                    <span class="bg-dark text-light quantity" style="padding-left: .5rem; padding-right:.5rem ;" data-mdb-ripple-init><%= p.quantity %></span>
+                                    <button type="button" class="btn btn-minus" style="background-color: #d8d8d8" data-product-id="<%= p.productId._id %>" data-mdb-ripple-init>-</button>
+                                </span>    
                             </div>
         
                             <form action="/cart-delete-item" method="POST">

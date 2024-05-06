@@ -34,14 +34,18 @@
           <input type="number" name="newNumber" id="form6Example6" class="form-control" value="<%= user.number %>"  />
           <label class="form-label" for="form6Example6">Phone Number</label>
         </div>
+        <div class="form-outline mb-4">
+          forgot password ? <a href="/reset/<%=user.resetToken%>" class="">
+            change password
+          </a>
+        </div>
+        
         <input type="hidden" value="<%= user._id %>" name="userId">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
         <!-- Submit button -->
         <button type="submit" class="btn btn-primary btn-block mb-4">Save</button>
       </form>
-      <form action="/new-pasword" method="get">
-        <button type="submit">change password</button>
-      </form>
+      
 </main>
 
    <%- include('../includes/end.ejs') %>

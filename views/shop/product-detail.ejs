@@ -14,6 +14,11 @@
                   <p class="card-text">
                     <h2><%= product.price %></h2>
                     <p><%= product.description %></p>
+                    <p>vendor : 
+                      <a href="/user/profile/<%= user.userId %>">
+                        <%= user.firstName %> <%= user.lastName %>
+                      </a>
+                    </p>
                     <% if (isAuthenticated) { %>
                       <%- include('../includes/add-to-cart.ejs', {product: product}) %>
                     <% } %>

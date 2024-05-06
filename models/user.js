@@ -15,6 +15,10 @@ const userSchema = new Schema({
     type: String,
     required: true
   },
+  userType:{
+    type: String,
+    required: true
+  },
   password: {
     type: String,
     required: true
@@ -39,28 +43,37 @@ const userSchema = new Schema({
   }
 });
 
-userSchema.methods.addToCart = function(product) {
+userSchema.methods.addToCart = function(product, action) {
   const cartProductIndex = this.cart.items.findIndex(cp => {
     return cp.productId.toString() === product._id.toString();
   });
-  let newQuantity = 1;
+
   const updatedCartItems = [...this.cart.items];
 
-  if (cartProductIndex >= 0) {
-    newQuantity = this.cart.items[cartProductIndex].quantity + 1;
-    updatedCartItems[cartProductIndex].quantity = newQuantity;
+  if (action === 'add') {
+    if (cartProductIndex >= 0) {
+      updatedCartItems[cartProductIndex].quantity++;
+    } else {
+      updatedCartItems.push({
+        productId: product._id,
+        quantity: 1
+      });
+    }
+  } else if (action === 'remove') {
+    if (cartProductIndex >= 0) {
+      updatedCartItems[cartProductIndex].quantity--;
+      if (updatedCartItems[cartProductIndex].quantity <= 0) {
+        updatedCartItems.splice(cartProductIndex, 1);
+      }
+    } 
   } else {
-    updatedCartItems.push({
-      productId: product._id,
-      quantity: newQuantity
-    });
+    return Promise.reject(new Error('Invalid action'));
   }
-  const updatedCart = {
-    items: updatedCartItems
-  };
-  this.cart = updatedCart;
+
+  this.cart.items = updatedCartItems;
   return this.save();
 };
+
 
 userSchema.methods.removeFromCart = function(productId) {
   const updatedCartItems = this.cart.items.filter(item => {

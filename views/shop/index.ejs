@@ -20,6 +20,9 @@
   <body style="background-color: #f3f3f3">
     <%- include('../includes/navigation.ejs') %>
     <main>
+      <% if (error) { %>
+        <div class="text-center alert alert-danger"><%= error %></div>
+    <% } %>
       <div
         class="carousel slide"
         data-bs-ride="carousel"

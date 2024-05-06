@@ -5,6 +5,7 @@ const { body } = require('express-validator/check');
 
 const adminController = require('../controllers/admin');
 const isAuth = require('../middleware/is-auth');
+const isVendor = require('../middleware/is-vendor');
 
 const router = express.Router();
 
@@ -13,7 +14,7 @@ router.post("/profile", isAuth, adminController.postProfile);
 
 
 // /admin/add-product => GET
-router.get('/add-product', isAuth, adminController.getAddProduct);
+router.get('/add-product', isAuth,isVendor, adminController.getAddProduct);
 
 // /admin/products => GET
 router.get('/products', isAuth, adminController.getProducts);
@@ -32,6 +33,7 @@ router.post(
       .trim()
   ],
   isAuth,
+  isVendor,
   adminController.postAddProduct
 );
 
@@ -50,6 +52,7 @@ router.post(
       .trim()
   ],
   isAuth,
+  isVendor,
   adminController.postEditProduct
 );
 

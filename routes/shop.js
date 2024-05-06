@@ -13,9 +13,13 @@ router.get("/products", shopController.getProducts);
 
 router.get("/products/:productId", shopController.getProduct);
 
+router.get("/filtered/products", shopController.getFilteredProducts);
+
 router.get("/cart", isAuth, shopController.getCart);
 
 router.post("/cart", isAuth, shopController.postCart);
+
+router.get("/update-cart/:productId",isAuth,shopController.updateCart);
 
 router.post("/cart-delete-item", isAuth, shopController.postCartDeleteProduct);
 
@@ -24,5 +28,9 @@ router.get("/checkout", isAuth, shopController.getCheckout);
 router.get("/orders", isAuth, shopController.getOrders);
 
 router.get("/orders/:orderId", isAuth, shopController.getInvoice);
+
+router.get("/user/profile/:userId", shopController.getVendorProfile);
+
+
 
 module.exports = router;

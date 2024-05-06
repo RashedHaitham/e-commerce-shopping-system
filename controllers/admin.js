@@ -1,7 +1,7 @@
 const fileHelper = require("../util/file");
 
 const { validationResult } = require("express-validator/check");
-const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 
 const Product = require("../models/product");
 const User = require("../models/user");
@@ -199,13 +199,36 @@ exports.getProfile = (req, res, next) => {
 
   User.findById(userId)
     .then((user) => {
-      return res.render("admin/profile", {
-        pageTitle: "My Profile",
-        path: "/admin/profile",
-        user: user,
+      crypto.randomBytes(32, (err, buffer) => {
+        if (err) {
+          console.log(err);
+          const error = new Error(err);
+          error.httpStatusCode = 500;
+          return next(error);
+        }
+        const token = buffer.toString("hex");
+        user.resetToken = token;
+        user.resetTokenExpiration = Date.now() + 3600000; // One hour expiration
+        user.save()
+          .then(() => {
+            // Render the profile page with updated user data
+            return res.render("admin/profile", {
+              pageTitle: "My Profile",
+              path: "/admin/profile",
+              user: user,
+            });
+          })
+          .catch((err) => {
+            console.log(err, "password");
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
+          });
       });
+      // Password reset logic ends here
     })
     .catch((err) => {
+      console.log(err, "user");
       const error = new Error(err);
       error.httpStatusCode = 500;
       return next(error);

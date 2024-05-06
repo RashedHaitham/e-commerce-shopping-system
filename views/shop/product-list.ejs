@@ -4,9 +4,31 @@
 
     <body style="background-color: #f3f3f3;">
         <%- include('../includes/navigation.ejs') %>
-
             <main class="m-5 ">
-                <% if (prods.length > 0) { %>
+              <div class="container mb-5">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <form action="/filtered/products" method="get" enctype="multipart/form-data" novalidate>
+                            <div class="input-group mb-4">
+                              <div class="form-outline" data-mdb-input-init>
+                                <input name="searchTerm" type="search" id="searchInput" class="form-control" />
+                                <label class="form-label" for="searchInput">Search</label>
+                              </div>
+                              <button type="submit" class="btn btn-primary" id="searchButton" data-mdb-ripple-init>
+                                <i class="fas fa-search"></i>
+                              </button>
+                            </div>
+                            <div class="multi-range-slider"> 
+                              <input name="low" type="range" min="<%= minPrice %>" max="<%= maxPrice %>" value="<%= minPrice %>" class="mdb-range" id="lowerSlider">
+                              <input name="high" type="range" min="<%= minPrice %>" max="<%= maxPrice %>" value="<%= maxPrice %>" class="mdb-range" id="upperSlider">
+                            </div>
+                            <span class="output">Selected Range: <span id="minVal"><%= minPrice %></span> - <span id="maxVal"><%= maxPrice %></span></span>
+                        </form>                              
+                    </div>
+                </div>
+            </div>
+            
+                <% if (prods.length > 0) { %>   
                     <div class="row row-cols-2 row-cols-md-4 g-4 justify-content-center">
                         <% for (let product of prods) { %>
                             <div class="col">
