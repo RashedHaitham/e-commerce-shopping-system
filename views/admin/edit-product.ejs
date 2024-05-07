@@ -50,10 +50,23 @@
                     id="description" 
                     rows="5"><% if (editing || hasError) { %><%= product.description %><% } %></textarea>
                     <label class="form-label" for="description">Description</label>
-
             </div>
     
-           
+           <div class="form-outline mb-4">
+            <!-- Category input -->
+                <label class="form-label" for="category">Category</label>
+                <select class="form-select" name="category" id="category">
+                    <option value="" disabled selected>Select category</option>
+                    <option value="Electronics" <% if (editing || hasError) { if (product.category === 'Electronics') { %> selected <% } } %>>Electronics</option>
+                    <option value="Clothing" <% if (editing || hasError) { if (product.category === 'Clothing') { %> selected <% } } %>>Clothing</option>
+                    <option value="Books" <% if (editing || hasError) { if (product.category === 'Books') { %> selected <% } } %>>Books</option>
+                    <option value="Home & Kitchen" <% if (editing || hasError) { if (product.category === 'Home & Kitchen') { %> selected <% } } %>>Home & Kitchen</option>
+                    <option value="Toys" <% if (editing || hasError) { if (product.category === 'Toys') { %> selected <% } } %>>Toys</option>
+                    <option value="Beauty" <% if (editing || hasError) { if (product.category === 'Beauty') { %> selected <% } } %>>Beauty</option>
+                    <option value="Sports" <% if (editing || hasError) { if (product.category === 'Sports') { %> selected <% } } %>>Sports</option>
+                    <option value="Other" <% if (editing || hasError) { if (product.category === 'Other') { %> selected <% } } %>>Other</option>
+                </select>
+           </div>
         
             <!-- Submit button -->
             <% if (editing) { %>

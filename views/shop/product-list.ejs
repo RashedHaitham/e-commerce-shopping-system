@@ -8,22 +8,36 @@
               <div class="container mb-5">
                 <div class="row justify-content-center">
                     <div class="col-md-6">
-                        <form action="/filtered/products" method="get" enctype="multipart/form-data" novalidate>
-                            <div class="input-group mb-4">
-                              <div class="form-outline" data-mdb-input-init>
+                      <form action="/filtered/products" method="get" enctype="multipart/form-data" novalidate>
+                        <div class="input-group mb-4">
+                            <div class="form-outline" data-mdb-input-init>
                                 <input name="searchTerm" type="search" id="searchInput" class="form-control" />
                                 <label class="form-label" for="searchInput">Search</label>
-                              </div>
-                              <button type="submit" class="btn btn-primary" id="searchButton" data-mdb-ripple-init>
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="searchButton" data-mdb-ripple-init>
                                 <i class="fas fa-search"></i>
-                              </button>
-                            </div>
-                            <div class="multi-range-slider"> 
-                              <input name="low" type="range" min="<%= minPrice %>" max="<%= maxPrice %>" value="<%= minPrice %>" class="mdb-range" id="lowerSlider">
-                              <input name="high" type="range" min="<%= minPrice %>" max="<%= maxPrice %>" value="<%= maxPrice %>" class="mdb-range" id="upperSlider">
-                            </div>
-                            <span class="output">Selected Range: <span id="minVal"><%= minPrice %></span> - <span id="maxVal"><%= maxPrice %></span></span>
-                        </form>                              
+                            </button>
+                        </div>
+                        <div class="form-outline mb-4">
+                          <select name="category" class="form-select">
+                              <option value="">All Categories</option>
+                              <option value="Electronics">Electronics</option>
+                              <option value="Clothing">Clothing</option>
+                              <option value="Books">Books</option>
+                              <option value="Home & Kitchen">Home & Kitchen</option>
+                              <option value="Toys">Toys</option>
+                              <option value="Beauty">Beauty</option>
+                              <option value="Sports">Sports</option>
+                              <option value="Other">Other</option>
+                            </select>
+                      </div>
+                        <div class="multi-range-slider">
+                            <input name="low" type="range" min="<%= minPrice %>" max="<%= maxPrice %>" value="<%= minPrice %>" class="mdb-range" id="lowerSlider">
+                            <input name="high" type="range" min="<%= minPrice %>" max="<%= maxPrice %>" value="<%= maxPrice %>" class="mdb-range" id="upperSlider">
+                        </div>
+                        <span class="output">Selected Range: <span id="minVal"><%= minPrice %></span> - <span id="maxVal"><%= maxPrice %></span></span>
+                    </form>
+                                                  
                     </div>
                 </div>
             </div>

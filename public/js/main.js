@@ -7,27 +7,31 @@ yearElement.textContent = currentYear;
 
 //plus minus
 document.addEventListener("DOMContentLoaded", function () {
-  const quantitySpan = document.querySelector(".quantity");
-  const btnPlus = document.querySelector(".btn-plus");
-  const btnMinus = document.querySelector(".btn-minus");
+  const quantitySpans = document.querySelectorAll(".quantity");
+const btnPluses = document.querySelectorAll(".btn-plus");
+const btnMinuses = document.querySelectorAll(".btn-minus");
 
+btnPluses.forEach(function(btnPlus, index) {
   btnPlus.addEventListener("click", function () {
-    let quantity = parseInt(quantitySpan.textContent);
+    let quantity = parseInt(quantitySpans[index].textContent);
     quantity++;
-    quantitySpan.textContent = quantity;
+    quantitySpans[index].textContent = quantity;
     const productId = btnPlus.getAttribute("data-product-id");
     updateCart(productId, "add");
   });
+});
 
+btnMinuses.forEach(function(btnMinus, index) {
   btnMinus.addEventListener("click", function () {
-    let quantity = parseInt(quantitySpan.textContent);
+    let quantity = parseInt(quantitySpans[index].textContent);
     if (quantity > 0) {
       quantity--;
-      quantitySpan.textContent = quantity;
+      quantitySpans[index].textContent = quantity;
     }
     const productId = btnMinus.getAttribute("data-product-id");
     updateCart(productId, "remove");
   });
+});
 
   function updateCart(productId, action) {
     console.log(productId);

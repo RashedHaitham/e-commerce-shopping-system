@@ -82,9 +82,22 @@ exports.getProduct = (req, res, next) => {
             lastName: user.lastName,
           };
 
+          let totalRating = 0;
+          let rating=0;
+          if (product.reviews.length > 0) {
+            product.reviews.forEach(review => {
+              totalRating += review.rating;
+            });
+            const averageRating = totalRating / product.reviews.length;
+            rating = averageRating;
+          } else {
+            rating = 0; // If there are no reviews, set average rating to 0
+          }
+
           res.render("shop/product-detail", {
             user: userDetails,
             product: product,
+            rating:rating,
             pageTitle: product.title,
             path: "/products",
           });
@@ -104,7 +117,7 @@ exports.getProduct = (req, res, next) => {
 
 exports.getFilteredProducts = (req, res, next) => {
   const page = +req.query.page || 1;
-
+  const category = req.query.category || "";
   const searchTerm = req.query.searchTerm || "";
   const low = parseInt(req.query.low) || 0;
   const high = parseInt(req.query.high) || Infinity;
@@ -116,7 +129,9 @@ exports.getFilteredProducts = (req, res, next) => {
     ],
     price: { $gte: low, $lte: high },
   };
-
+  if (category) {
+    filter.category = category;
+  }
   Product.find(filter)
     .countDocuments()
     .then((totalItems) => {
@@ -210,13 +225,11 @@ exports.updateCart = (req, res, next) => {
         req.user
           .addToCart(product._id, action === "add" ? "add" : "remove")
           .then(() => {
-            return res
-              .status(200)
-              .json({
-                quantity: req.user.cart.items.find(
-                  (item) => item.productId.toString() === productId.toString()
-                ).quantity,
-              });
+            return res.status(200).json({
+              quantity: req.user.cart.items.find(
+                (item) => item.productId.toString() === productId.toString()
+              ).quantity,
+            });
           })
           .catch((err) => {
             console.error("Error updating cart:", err);
@@ -297,7 +310,7 @@ exports.postOrder = (req, res, next) => {
       return order.save();
     })
     .then((result) => {
-      const charge = stripe.charges.create({
+      stripe.charges.create({
         amount: totalSum * 100,
         currency: "usd",
         description: "Demo Order",
@@ -433,3 +446,111 @@ exports.getVendorProfile = (req, res, next) => {
     )
     .catch((err) => next(err));
 };
+
+exports.getReviews = (req, res, next) => {
+  const productId = req.params.productId;
+  Product.findById(productId)
+    .select('reviews title _id')
+    .then(product => {
+      if (!product) {
+        console.log('Product not found');
+        return;
+      }
+
+      // Create an array to store promises for fetching user details
+      const userDetailsPromises = [];
+
+      // Loop through each review and push a promise to fetch user details for that review
+      product.reviews.forEach(review => {
+        const userPromise = User.findById(review.userId)
+          .then(user => {
+            return {
+              firstName: user.firstName,
+              lastName: user.lastName
+            };
+          })
+          .catch(err => {
+            console.error("Error fetching user:", err);
+            throw err; // Rethrow the error to be caught later
+          });
+
+        userDetailsPromises.push(userPromise);
+      });
+
+      // Wait for all user detail promises to resolve
+      return Promise.all(userDetailsPromises)
+        .then(userDetails => {
+          // Pass the user details along with other data to the template
+          res.render("shop/reviews", {
+            path: "/reviews",
+            pageTitle: product.title + " Reviews",
+            reviews: product.reviews,
+            productName: product.title,
+            userDetails: userDetails, 
+            productId: productId
+          });
+        })
+        .catch(err => {
+          console.error("Error fetching user details:", err);
+          const error = new Error("An error occurred while fetching user details.");
+          error.httpStatusCode = 500;
+          throw error; // Rethrow the error to be caught later
+        });
+    })
+    .catch(err => {
+      console.error("Error fetching reviews:", err);
+      const error = new Error("An error occurred while fetching reviews.");
+      error.httpStatusCode = 500;
+      return next(error);
+    });
+};
+
+
+
+const mongoose = require('mongoose');
+
+exports.postReviews = async (req, res, next) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        const userId = req.session.user._id;
+        const productId = req.body.productId;
+        const text = req.body.text || " ";
+        const rating = req.body.rating;
+
+        const product = await Product.findById(productId).session(session);
+        if (!product) {
+            console.log('Product not found');
+            throw new Error('Product not found');
+        }
+
+        const existingReview = product.reviews.find(review => review.userId.equals(userId));
+        if (existingReview) {
+            existingReview.rating = rating;
+            existingReview.text = text;
+        } else {
+            product.addReview(userId, text, rating);
+        }
+
+        const updatedProduct = await product.save({ session });
+        if (!updatedProduct) {
+            console.log('Product not updated');
+            throw new Error('Product not updated');
+        }
+
+        await session.commitTransaction();
+        session.endSession();
+
+        console.log('Review added or updated successfully');
+        res.redirect(`/product/reviews/${productId}`);
+    } catch (error) {
+        console.error("Error adding or updating review:", error);
+        await session.abortTransaction();
+        session.endSession();
+        const err = new Error("An error occurred while adding or updating the review.");
+        err.httpStatusCode = 500;
+        return next(err);
+    }
+};
+

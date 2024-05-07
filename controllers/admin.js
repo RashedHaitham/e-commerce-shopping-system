@@ -4,6 +4,7 @@ const { validationResult } = require("express-validator/check");
 const crypto = require("crypto");
 
 const Product = require("../models/product");
+const Order = require("../models/order");
 const User = require("../models/user");
 exports.getAddProduct = (req, res, next) => {
   res.render("admin/edit-product", {
@@ -21,6 +22,8 @@ exports.postAddProduct = (req, res, next) => {
   const image = req.file;
   const price = req.body.price;
   const description = req.body.description;
+  const category=req.body.category;
+
   if (!image) {
     return res.status(422).render("admin/edit-product", {
       pageTitle: "Add Product",
@@ -31,6 +34,7 @@ exports.postAddProduct = (req, res, next) => {
         title: title,
         price: price,
         description: description,
+        category:category,
       },
       errorMessage: "Attached file is not an image.",
       validationErrors: [],
@@ -48,6 +52,7 @@ exports.postAddProduct = (req, res, next) => {
       product: {
         title: title,
         price: price,
+        category:category,
         description: description,
       },
       errorMessage: errors.array()[0].msg,
@@ -62,6 +67,7 @@ exports.postAddProduct = (req, res, next) => {
     price: price,
     description: description,
     imageUrl: imageUrl,
+    category:category,
     userId: req.user,
   });
   product
@@ -112,6 +118,7 @@ exports.postEditProduct = (req, res, next) => {
   const updatedPrice = req.body.price;
   const image = req.file;
   const updatedDesc = req.body.description;
+  const updatedCategory=req.body.category;
 
   const errors = validationResult(req);
 
@@ -125,6 +132,7 @@ exports.postEditProduct = (req, res, next) => {
         title: updatedTitle,
         price: updatedPrice,
         description: updatedDesc,
+        category:updatedCategory,
         _id: prodId,
       },
       errorMessage: errors.array()[0].msg,
@@ -140,6 +148,7 @@ exports.postEditProduct = (req, res, next) => {
       product.title = updatedTitle;
       product.price = updatedPrice;
       product.description = updatedDesc;
+      product.category=updatedCategory;
       if (image) {
         fileHelper.deleteFile(product.imageUrl);
         product.imageUrl = image.path;
@@ -209,7 +218,8 @@ exports.getProfile = (req, res, next) => {
         const token = buffer.toString("hex");
         user.resetToken = token;
         user.resetTokenExpiration = Date.now() + 3600000; // One hour expiration
-        user.save()
+        user
+          .save()
           .then(() => {
             // Render the profile page with updated user data
             return res.render("admin/profile", {
@@ -258,4 +268,91 @@ exports.postProfile = (req, res, next) => {
       error.httpStatusCode = 500;
       return next(error);
     });
+};
+
+exports.getProductOrders = async (req, res, next) => {
+  const userId = req.session.user._id;
+
+  try {
+    const orders = await Order.find({ "products.product.userId": userId });
+
+    const customerOrdersMap = new Map(); // Map to store orders grouped by customer
+
+    for (const order of orders) {
+      for (const product of order.products) {
+        if (product.product.userId.toString() === userId.toString()) {
+          // Check if product already exists for the customer
+          if (customerOrdersMap.has(order.user.userId.toString())) {
+            const existingOrderIndex = customerOrdersMap
+              .get(order.user.userId.toString())
+              .findIndex(
+                (existingProduct) =>
+                  existingProduct._id.toString() ===
+                  product.product._id.toString()
+              );
+            if (existingOrderIndex !== -1) {
+              // If product already exists, increase its quantity
+              customerOrdersMap.get(order.user.userId.toString())[
+                existingOrderIndex
+              ].quantity += product.quantity;
+            } else {
+              // If product doesn't exist, add it to the customer's order
+              const user = await User.findById(order.user.userId).select('_id firstName lastName');
+              customerOrdersMap.get(order.user.userId.toString()).push({
+                _id: product.product._id,
+                title: product.product.title,
+                price: product.product.price,
+                description: product.product.description,
+                imageUrl: product.product.imageUrl,
+                user: user,
+                quantity: product.quantity,
+              });
+            }
+          } else {
+            // If customer doesn't have any orders yet, create a new entry
+            const user = await User.findById(order.user.userId);
+            customerOrdersMap.set(order.user.userId.toString(), [
+              {
+                _id: product.product._id,
+                title: product.product.title,
+                price: product.product.price,
+                description: product.product.description,
+                imageUrl: product.product.imageUrl,
+                user: user,
+                quantity: product.quantity,
+              },
+            ]);
+          }
+        }
+      }
+    }
+
+    const customerOrders = Array.from(customerOrdersMap.values());
+    res.render("admin/product-orders", {
+      pageTitle: "Customer Orders",
+      path: "/admin/product-orders",
+      orders: customerOrders,
+    });
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+exports.getCustomerOrders = (req, res, next) => {
+  const customerId = req.params.customerId;
+
+  User.findById(customerId)
+  .then((user) => {
+    res.render("admin/customer-profile", {
+      pageTitle: "Customer Profile",
+      path: "/admin/product-orders/customer",
+      user: user,
+    });
+  })
+  .catch((err) => {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
+  });
 };
