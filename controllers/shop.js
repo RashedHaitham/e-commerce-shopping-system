@@ -83,9 +83,9 @@ exports.getProduct = (req, res, next) => {
           };
 
           let totalRating = 0;
-          let rating=0;
+          let rating = 0;
           if (product.reviews.length > 0) {
-            product.reviews.forEach(review => {
+            product.reviews.forEach((review) => {
               totalRating += review.rating;
             });
             const averageRating = totalRating / product.reviews.length;
@@ -97,7 +97,7 @@ exports.getProduct = (req, res, next) => {
           res.render("shop/product-detail", {
             user: userDetails,
             product: product,
-            rating:rating,
+            rating: rating,
             pageTitle: product.title,
             path: "/products",
           });
@@ -336,6 +336,7 @@ exports.getOrders = (req, res, next) => {
         path: "/orders",
         pageTitle: "Your Orders",
         orders: orders,
+        userId: req.user._id,
       });
     })
     .catch((err) => {
@@ -450,10 +451,10 @@ exports.getVendorProfile = (req, res, next) => {
 exports.getReviews = (req, res, next) => {
   const productId = req.params.productId;
   Product.findById(productId)
-    .select('reviews title _id')
-    .then(product => {
+    .select("reviews title _id")
+    .then((product) => {
       if (!product) {
-        console.log('Product not found');
+        console.log("Product not found");
         return;
       }
 
@@ -461,15 +462,15 @@ exports.getReviews = (req, res, next) => {
       const userDetailsPromises = [];
 
       // Loop through each review and push a promise to fetch user details for that review
-      product.reviews.forEach(review => {
+      product.reviews.forEach((review) => {
         const userPromise = User.findById(review.userId)
-          .then(user => {
+          .then((user) => {
             return {
               firstName: user.firstName,
-              lastName: user.lastName
+              lastName: user.lastName,
             };
           })
-          .catch(err => {
+          .catch((err) => {
             console.error("Error fetching user:", err);
             throw err; // Rethrow the error to be caught later
           });
@@ -479,25 +480,27 @@ exports.getReviews = (req, res, next) => {
 
       // Wait for all user detail promises to resolve
       return Promise.all(userDetailsPromises)
-        .then(userDetails => {
+        .then((userDetails) => {
           // Pass the user details along with other data to the template
           res.render("shop/reviews", {
             path: "/reviews",
             pageTitle: product.title + " Reviews",
             reviews: product.reviews,
             productName: product.title,
-            userDetails: userDetails, 
-            productId: productId
+            userDetails: userDetails,
+            productId: productId,
           });
         })
-        .catch(err => {
+        .catch((err) => {
           console.error("Error fetching user details:", err);
-          const error = new Error("An error occurred while fetching user details.");
+          const error = new Error(
+            "An error occurred while fetching user details."
+          );
           error.httpStatusCode = 500;
           throw error; // Rethrow the error to be caught later
         });
     })
-    .catch(err => {
+    .catch((err) => {
       console.error("Error fetching reviews:", err);
       const error = new Error("An error occurred while fetching reviews.");
       error.httpStatusCode = 500;
@@ -505,52 +508,111 @@ exports.getReviews = (req, res, next) => {
     });
 };
 
-
-
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 exports.postReviews = async (req, res, next) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-    try {
-        const userId = req.session.user._id;
-        const productId = req.body.productId;
-        const text = req.body.text || " ";
-        const rating = req.body.rating;
+  try {
+    const userId = req.session.user._id;
+    const productId = req.body.productId;
+    const text = req.body.text || " ";
+    const rating = req.body.rating;
 
-        const product = await Product.findById(productId).session(session);
-        if (!product) {
-            console.log('Product not found');
-            throw new Error('Product not found');
-        }
-
-        const existingReview = product.reviews.find(review => review.userId.equals(userId));
-        if (existingReview) {
-            existingReview.rating = rating;
-            existingReview.text = text;
-        } else {
-            product.addReview(userId, text, rating);
-        }
-
-        const updatedProduct = await product.save({ session });
-        if (!updatedProduct) {
-            console.log('Product not updated');
-            throw new Error('Product not updated');
-        }
-
-        await session.commitTransaction();
-        session.endSession();
-
-        console.log('Review added or updated successfully');
-        res.redirect(`/product/reviews/${productId}`);
-    } catch (error) {
-        console.error("Error adding or updating review:", error);
-        await session.abortTransaction();
-        session.endSession();
-        const err = new Error("An error occurred while adding or updating the review.");
-        err.httpStatusCode = 500;
-        return next(err);
+    const product = await Product.findById(productId).session(session);
+    if (!product) {
+      console.log("Product not found");
+      throw new Error("Product not found");
     }
+
+    const existingReview = product.reviews.find((review) =>
+      review.userId.equals(userId)
+    );
+    if (existingReview) {
+      existingReview.rating = rating;
+      existingReview.text = text;
+    } else {
+      product.addReview(userId, text, rating);
+    }
+
+    const updatedProduct = await product.save({ session });
+    if (!updatedProduct) {
+      console.log("Product not updated");
+      throw new Error("Product not updated");
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    console.log("Review added or updated successfully");
+    res.redirect(`/product/reviews/${productId}`);
+  } catch (error) {
+    console.error("Error adding or updating review:", error);
+    await session.abortTransaction();
+    session.endSession();
+    const err = new Error(
+      "An error occurred while adding or updating the review."
+    );
+    err.httpStatusCode = 500;
+    return next(err);
+  }
 };
 
+const http = require("http");
+
+exports.chat = (req, res, next) => {
+  if (req.method !== "POST") {
+    return res.status(405).end("Method Not Allowed");
+  }
+  // Prepare data to be sent in the POST request body
+  const admin = req.session.user;
+  const postData = {
+    email: admin.email,
+    password: admin.password,
+  };
+
+  const options = {
+    hostname: "host.docker.internal",
+    port: 3001,
+    path: "/api/check-user",
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Data: JSON.stringify(postData),
+    },
+  };
+  let session;
+  const request = http.request(options, (serverRes) => {
+    serverRes.on("data", (chunk) => {
+      session = JSON.parse(chunk).session;
+      console.log(`Received session from server: ${session}`);
+    });
+
+    serverRes.on("end", () => {
+      if (serverRes.statusCode === 200) {
+        const sessionString = session;
+        const redirectUrl = `http://localhost:3001?session=${sessionString}`;
+        const script = `
+        <script>
+          window.open("${redirectUrl}", "_blank");
+        </script>
+      `;
+        res.writeHead(200, { "Content-Type": "text/html" });
+        res.write(script);
+        res.end();
+      } else {
+        res.status(500).end("Server response indicates failure");
+      }
+    });
+  });
+
+  request.on("error", (error) => {
+    console.error("Error sending POST request:", error);
+    res.status(500).end("Error sending data");
+  });
+
+  // Send the POST request body
+  request.write(JSON.stringify(postData));
+  request.end();
+};

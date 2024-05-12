@@ -3,6 +3,8 @@ const fileHelper = require("../util/file");
 const { validationResult } = require("express-validator/check");
 const crypto = require("crypto");
 
+const Replicate = require("replicate");
+
 const Product = require("../models/product");
 const Order = require("../models/order");
 const User = require("../models/user");
@@ -17,12 +19,12 @@ exports.getAddProduct = (req, res, next) => {
   });
 };
 
-exports.postAddProduct = (req, res, next) => {
+exports.postAddProduct = async (req, res, next) => {
   const title = req.body.title;
   const image = req.file;
   const price = req.body.price;
   const description = req.body.description;
-  const category=req.body.category;
+  const category = req.body.category;
 
   if (!image) {
     return res.status(422).render("admin/edit-product", {
@@ -34,12 +36,31 @@ exports.postAddProduct = (req, res, next) => {
         title: title,
         price: price,
         description: description,
-        category:category,
+        category: category,
       },
       errorMessage: "Attached file is not an image.",
       validationErrors: [],
     });
   }
+
+/*
+  const replicate = new Replicate();
+  const input = {
+    prompt:
+      "modern sofa+ in a contemporary living room, filled with stylish decor+;modern, contemporary, sofa, living room, stylish decor",
+    image_num: 4,
+    image_path: imageURI,
+    product_size: "0.5 * width",
+    negative_prompt:
+      "illustration, 3d, sepia, painting, cartoons, sketch, (worst quality:2)",
+  };
+
+  const output = await replicate.run(
+    "logerzhu/ad-inpaint:b1c17d148455c1fda435ababe9ab1e03bc0d917cc3cf4251916f22c45c83c7df",
+    { input }
+  );
+  console.log(output);
+*/
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -52,7 +73,7 @@ exports.postAddProduct = (req, res, next) => {
       product: {
         title: title,
         price: price,
-        category:category,
+        category: category,
         description: description,
       },
       errorMessage: errors.array()[0].msg,
@@ -67,7 +88,7 @@ exports.postAddProduct = (req, res, next) => {
     price: price,
     description: description,
     imageUrl: imageUrl,
-    category:category,
+    category: category,
     userId: req.user,
   });
   product
@@ -118,7 +139,7 @@ exports.postEditProduct = (req, res, next) => {
   const updatedPrice = req.body.price;
   const image = req.file;
   const updatedDesc = req.body.description;
-  const updatedCategory=req.body.category;
+  const updatedCategory = req.body.category;
 
   const errors = validationResult(req);
 
@@ -132,7 +153,7 @@ exports.postEditProduct = (req, res, next) => {
         title: updatedTitle,
         price: updatedPrice,
         description: updatedDesc,
-        category:updatedCategory,
+        category: updatedCategory,
         _id: prodId,
       },
       errorMessage: errors.array()[0].msg,
@@ -148,7 +169,7 @@ exports.postEditProduct = (req, res, next) => {
       product.title = updatedTitle;
       product.price = updatedPrice;
       product.description = updatedDesc;
-      product.category=updatedCategory;
+      product.category = updatedCategory;
       if (image) {
         fileHelper.deleteFile(product.imageUrl);
         product.imageUrl = image.path;
@@ -205,7 +226,7 @@ exports.deleteProduct = (req, res, next) => {
 
 exports.getProfile = (req, res, next) => {
   const userId = req.user._id;
-
+  console.log(typeof userId);
   User.findById(userId)
     .then((user) => {
       crypto.randomBytes(32, (err, buffer) => {
@@ -297,7 +318,9 @@ exports.getProductOrders = async (req, res, next) => {
               ].quantity += product.quantity;
             } else {
               // If product doesn't exist, add it to the customer's order
-              const user = await User.findById(order.user.userId).select('_id firstName lastName');
+              const user = await User.findById(order.user.userId).select(
+                "_id firstName lastName"
+              );
               customerOrdersMap.get(order.user.userId.toString()).push({
                 _id: product.product._id,
                 title: product.product.title,
@@ -341,18 +364,20 @@ exports.getProductOrders = async (req, res, next) => {
 
 exports.getCustomerOrders = (req, res, next) => {
   const customerId = req.params.customerId;
-
+  const admin = req.session.user;
   User.findById(customerId)
-  .then((user) => {
-    res.render("admin/customer-profile", {
-      pageTitle: "Customer Profile",
-      path: "/admin/product-orders/customer",
-      user: user,
+    .then((user) => {
+      res.render("admin/customer-profile", {
+        pageTitle: "Customer Profile",
+        path: "/admin/product-orders/customer",
+        user: user,
+        firstName: admin.firstName,
+        userId: admin._id,
+      });
+    })
+    .catch((err) => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
     });
-  })
-  .catch((err) => {
-    const error = new Error(err);
-    error.httpStatusCode = 500;
-    return next(error);
-  });
 };

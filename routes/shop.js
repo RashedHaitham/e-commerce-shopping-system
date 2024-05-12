@@ -35,4 +35,6 @@ router.get("/product/reviews/:productId", isAuth, shopController.getReviews);
 
 router.post("/product/reviews", isAuth, shopController.postReviews);
 
+router.post("/product-orders/chat", isAuth, shopController.chat);
+
 module.exports = router;

@@ -21,9 +21,12 @@
       <div class="mb-4">
         Customer Phone Number: <span><%= user.number %></span>
       </div>
-      <a class="btn btn-primary btn-block mb-4" href="/admin/product-orders">Back to orders</a>
+      <form action="/product-orders/chat" method="post">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <input type="hidden" name="userId" value="<%= userId %>" />
+        <button type="submit" class="btn btn-success mb-4">Chat with <%= user.firstName %></button>
+    </form> 
+    <a class="btn btn-primary btn-block mb-4" href="/admin/product-orders">Back to orders</a>   
     </div>
   </main>
-  
-
    <%- include('../includes/end.ejs') %>
